@@ -1,12 +1,15 @@
-import {AppRegistry} from 'react-native';
-import {name as appName} from './app.json';
+import React from 'react'
+import { AppRegistry } from 'react-native';
+import { name as appName } from './app.json';
 
-import Login from './src/Pages/Login';
-import Driver from './src/Pages/Steps/driver';
-import Passenger from './src/Pages/Steps/passenger';
-import Type from './src/Pages/Steps/type';
-import Ride from './src/Pages/Ride';
-import Home from './src/Pages/Home';
+import Routes from './src/Routes'
+import { Provider } from 'react-redux'
+import store from './src/Store';
 
+const App = () => (
+    <Provider store={store}>
+        <Routes />
+    </Provider>
+)
 
-AppRegistry.registerComponent(appName, () => Home);
+AppRegistry.registerComponent(appName, () => App);
