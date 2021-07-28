@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react'
+import { useDispatch } from 'react-redux'
 import { Keyboard } from 'react-native'
 
 import { Container, Title, SubTitle, Button, ButtonText, Input, Spacer } from '../../Styles'
+import { updateCar, createUser } from '../../Store/modules/app/actions'
 
 const Driver = () => {
+    const dispatch = useDispatch()
     const [visible, setVisible] = useState(true)
+
+    const [car, setCar] = useState({
+        licensePlate: '',
+        brand: '',
+        model: '',
+        color: ''
+    })
+
+    const signIn = () => {
+        dispatch(updateCar(car))
+        dispatch(createUser())
+    }
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener(
@@ -42,24 +57,34 @@ const Driver = () => {
 
             <Container justify="flex-start">
                 <Spacer height={50} />
-                <Input placeholder="Placa do veículo" />
+                <Input 
+                    placeholder="Placa do veículo"
+                    onChangeText={(licensePlate) => setCar({ ...car, licensePlate})}
+                    value={car.licensePlate}          
+                />
                 <Spacer />
-                <Input placeholder="Marca do veículo" />
+                <Input 
+                    placeholder="Marca do veículo"
+                    onChangeText={(brand) => setCar({ ...car, brand})}                         
+                    value={car.brand}          
+                />
                 <Spacer />
-                <Input placeholder="Modelo do veículo" />
+                <Input 
+                    placeholder="Modelo do veículo" 
+                    onChangeText={(model) => setCar({ ...car, model})}                         
+                    value={car.model}          
+                />
                 <Spacer />
-                <Input placeholder="Cor do veículo" />
-                <Spacer />
-                <Input placeholder="Cor do veículo" />
-
-
-
-
+                <Input 
+                    placeholder="Cor do veículo" 
+                    onChangeText={(color) => setCar({ ...car, color})}                         
+                    value={car.color}          
+                />
             </Container>
 
             {visible &&
                 <Container height={70} justify="flex-end">
-                    <Button>
+                    <Button onPress={() => signIn()}>
                         <ButtonText>Comece a usar</ButtonText>
                     </Button>
                 </Container>}

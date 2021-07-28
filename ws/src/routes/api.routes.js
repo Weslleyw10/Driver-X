@@ -42,8 +42,6 @@ router.post('/signup', async (req, res) => {
                 userId: finalUser._id
             }).save({ session })
 
-
-
         } else {
             // create credit card in pagarme
             const createCreditCard = await pagarme.createCreditCard({
@@ -72,7 +70,8 @@ router.post('/signup', async (req, res) => {
         session.endSession()
 
         res.json({
-            error: false
+            error: false,
+            user: finalUser
         })
 
     } catch (error) {
@@ -159,7 +158,7 @@ router.get('/address/:address', async (req, res) => {
     }
 })
 
-router.get('/pre-ride', async (req, res) => {
+router.post('/pre-ride', async (req, res) => {
     try {
         const { origin, destination } = req.body
         const routeRequest = await googleMaps.getRoute(origin, destination)
@@ -195,15 +194,16 @@ router.get('/pre-ride', async (req, res) => {
 
         const priceRide = ((distance.value / 1000) * 2.67).toFixed(2)
 
-        res.json({ error: false, distance, duration, priceRide, start_address, end_address, route})
+        res.json({ 
+            error: false, 
+            info: {
+                distance, duration, priceRide, start_address, end_address, route
+            }
+        })
         
     } catch (error) {
-        res.json({ error: true, message: error.message })
-        
+        res.json({ error: true, message: error.message })        
     }
 })
-
-
-
 
 module.exports = router

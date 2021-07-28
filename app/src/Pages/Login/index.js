@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Image } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import social from '../../Services/social'
 
@@ -8,9 +9,9 @@ import { Container, Button, ButtonText } from '../../Styles/index'
 import logo from '../../Assets/logo.png'
 import bgBottom from '../../Assets/bg-bottom-login.png'
 
-import { updateUser } from '../../Store/modules/app/actions'
+import { updateUser, signinUser } from '../../Store/modules/app/actions'
 
-const Login = () => {
+const Login = ({ navigation }) => {
     const dispatch = useDispatch()
     const { user } = useSelector(state => state.app)
 
@@ -25,17 +26,19 @@ const Login = () => {
                 '/me?fields=id,name,email'
             )
 
-            console.tron.log(auth)
-            console.tron.log(userFB)
+            // console.tron.log(auth)
+            // console.tron.log(userFB)
 
             dispatch(
                 updateUser({
                     fbId: userFB.data.id,
                     name: userFB.data.name,
-                    email: "weslleylopes.dev@gmail.com",
+                    email: "weslley.romao@gmail.com",
                     accessToken: auth.response.credentials.accessToken,
                 })
             )
+
+            dispatch(signinUser())
 
         } catch (error) {
             alert(error.message)
@@ -43,6 +46,18 @@ const Login = () => {
 
     }
 
+    const checkLogin = async () => {
+        await AsyncStorage.clear()
+        const user = await AsyncStorage.getItem('@driverx/user')
+        if(user) {
+            dispatch(updateUser(JSON.parse(user)))
+            navigation.replace('Home')
+        }
+    }
+
+    useEffect(() => {
+        checkLogin()
+    }, [])
 
 
     return (

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { Marker, Polyline } from 'react-native-maps'
+import { useSelector } from 'react-redux'
 import { TouchableOpacity } from 'react-native'
+
+import initialMarker from '../../Assets/initial-marker.png'
+import finalMarker from '../../Assets/final-marker.png'
 
 import {
     Container,
@@ -18,13 +23,29 @@ import {
 } from '../../Styles'
 
 
-export const Home = () => {
+export const Home = ({ navigation }) => {
+    const { user, ride } = useSelector(state => state.app)
 
-    // d = driver, p = passenger
-    const type = 'd'
+    const rideStatus = () => {
+        if (ride?.user?._id) {
+            if (ride?.driver?._id) {
+                return 'inRide';
+            } else {
+                return 'inSearch';
+            }
+        }
+
+        return 'empty';
+    };
+
+    console.log('RIDESTATUS', rideStatus())
+
+
+    // M = driver, P = passenger
+    const type = user.type
 
     // S = dont ride, I = informations, P = search, C = ride
-    const status = 'c'
+    const status = 's'
 
     return (
         <Container>
@@ -35,8 +56,36 @@ export const Home = () => {
                     longitudeDelta: 0.0922,
                     latitudeDelta: 0.0421
                 }}
-                disabled={status === 'p'}
-            />
+                disabled={rideStatus() === 'inSearch'}
+            >
+
+                {
+                    ride?.info && (
+                        <Polyline 
+                            coordinates={ride?.info?.route}
+                            strokeWidth={4}
+                            strokeColor="#000"
+                        />
+                    )
+                }
+
+                {
+                    ride?.info && (
+                        <Marker coordinate={ride?.info?.route[0]}>
+                            <Avatar source={initialMarker} small />
+                        </Marker>
+                    )
+                }
+
+                {
+                    ride?.info && (
+                        <Marker coordinate={ride?.info?.route[ride?.info?.route.length -1]}>
+                            <Avatar source={finalMarker} small />
+                        </Marker>
+                    )
+                }
+
+            </Map>
 
             <Container
                 position="absolute"
@@ -56,16 +105,19 @@ export const Home = () => {
                     align="flex-start"
                     padding={10}
                 >
-                    {status === 's' || type === 'd' && (
+                    {/* AVATAR */}
+                    {rideStatus() === 'empty' && !ride?.info && (
                         <TouchableOpacity>
                             <Avatar
                                 // elevation={50}
-                                source={{ uri: 'https://cdn.dribbble.com/users/361185/screenshots/3803404/flat-portrait.png?compress=1&resize=400x300' }}
+                                // source={{ uri: 'https://cdn.dribbble.com/users/361185/screenshots/3803404/flat-portrait.png?compress=1&resize=400x300' }}
+                                source={{ uri: `https://graph.facebook.com/${user.fbId}/picture?type=large&access_token=${user.accessToken}` }}
                             />
                         </TouchableOpacity>
                     )}
 
-                    {type === 'p' && status !== "s" && (
+                    {/* ORIGIN & DESTINATION */}
+                    {type === 'P' && rideStatus() === 'empty' && (
                         <Container
                             elevation={50}
                             color="light"
@@ -75,14 +127,14 @@ export const Home = () => {
                             <Container padding={20}>
                                 <Container justify="flex-start" row>
                                     <Bullet />
-                                    <SubTitle>Endereço de embarque completo</SubTitle>
+                                    <SubTitle numberOfLines={1}>{ride?.info?.start_address}</SubTitle>
                                 </Container>
 
                                 <Spacer height={5} />
 
                                 <Container justify="flex-start" row>
                                     <Bullet destination />
-                                    <SubTitle>Endereço de destino completo</SubTitle>
+                                    <SubTitle numberOfLines={1}>{ride?.info?.end_address}</SubTitle>
                                 </Container>
                             </Container>
 
@@ -96,8 +148,8 @@ export const Home = () => {
                 </Container>
 
 
-                {/*Passageiro procurando corrida */}
-                {status === 'p' && (
+                {/* Passageiro procurando corrida */}
+                {rideStatus() === 'inSearch' && user.type === 'P' && (
                     <Container padding={20} zIndex={-1}>
                         <PulseCircle
                             numPulses={3}
@@ -117,17 +169,22 @@ export const Home = () => {
                     padding={10}
                 >
                     {/* passageiro: sem corrida */}
-                    {type === 'p' && status === 's' && (
+                    {type === 'P' && rideStatus() === 'empty' && !ride?.info && (
                         <Container align="flex-start">
                             <SubTitle>Olá, Weslley L Silva</SubTitle>
                             <Title>Para onde você quer ir?</Title>
                             <Spacer />
-                            <Input placeholder="Procure um destino..." />
+                            <TouchableOpacity
+                                style={{ width: '100%' }}
+                                onPress={() => navigation.navigate('Ride')}
+                            >
+                                <Input editable={false} placeholder="Procure um destino..." />
+                            </TouchableOpacity>
                         </Container>
                     )}
 
                     {/* passageiro: informações da corrida */}
-                    {type === 'p' && (status === 'i' || status === 'p') && (
+                    {type === 'P' && rideStatus() !== 'inRide' && ride?.info && (
                         <Container align="flex-start">
                             <Container padding={20}>
                                 <SubTitle>Driver X convencional</SubTitle>
@@ -135,19 +192,19 @@ export const Home = () => {
 
                                 <Container height={50} row>
                                     <Container>
-                                        <Title>R$13,90</Title>
+                                        <Title>R${ride?.info?.priceRide}</Title>
                                     </Container>
                                     <VerticalSeparator />
                                     <Container>
-                                        <Title>5 mins</Title>
+                                        <Title>{ride?.info?.duration.text}</Title>
                                     </Container>
                                 </Container>
 
                                 <Spacer />
 
-                                <Button type={status === 'p' ? 'muted' : 'primary'}>
+                                <Button type={rideStatus() === 'inSearch' ? 'muted' : 'primary'}>
                                     <ButtonText>
-                                        {status === 'p' ? 'Cancelar Driver X' : 'Chamar Driver X'}
+                                        {rideStatus() === 'inSearch' ? 'Cancelar Driver X' : 'Chamar Driver X'}
                                     </ButtonText>
                                 </Button>
                             </Container>
@@ -155,7 +212,7 @@ export const Home = () => {
                     )}
 
                     {/* passageiro: em corrida */}
-                    {type === 'p' && status === 'c' && (
+                    {type === 'P' && rideStatus() === 'inRide' && (
                         <Container justify="flex-end">
                             <Container row>
                                 <Container align="flex-start" padding={20} row>
@@ -188,7 +245,7 @@ export const Home = () => {
                     )}
 
                     {/* motorista: sem corrida */}
-                    {type === 'd' && status === 's' && (
+                    {type === 'D' && rideStatus() === 'empty' && (
                         <Container justify="center">
                             <SubTitle>Olá, Juliana</SubTitle>
                             <Title>Ainda não temos corrida para você...</Title>
@@ -198,7 +255,7 @@ export const Home = () => {
                     )}
 
                     {/* motorista: em corrida */}
-                    {type === 'd' && status === 'c' && (
+                    {type === 'D' && rideStatus() === 'inRide' && (
                         <Container justify="flex-end">
                             <Container row>
                                 <Container align="center" padding={20} row>

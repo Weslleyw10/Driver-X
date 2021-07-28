@@ -16,7 +16,7 @@ export const Container = styled.View`
     padding: ${(props) => props.padding || 0}px;
     align-items: ${(props) => props.align || 'center'};
     position: ${(props) => props.position || 'relative'};
-    top: ${(props) => props.top || 0};
+    top: ${(props) => props.top ? props.top+'px' : 0 };
     z-index: ${(props) => props.zIndex || 1};
 `;
 

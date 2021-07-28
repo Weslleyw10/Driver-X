@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const URI = 'mongodb://localhost:27017/driverx?retryWrites=false'
+const URI = process.env.MONGO_URL
 
 mongoose.set('useNewUrlParser', true)
 mongoose.set('useFindAndModify', false)

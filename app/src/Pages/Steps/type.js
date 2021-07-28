@@ -1,11 +1,26 @@
 import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Image } from 'react-native'
 
 import car from '../../Assets/car.png'
 import hand from '../../Assets/hand.png'
 import { Container, Button, ButtonText, Title, SubTitle, PickerButton } from '../../Styles'
 
-const Type = () => {
+import { updateUser } from '../../Store/modules/app/actions'
+
+const Type = ({ navigation }) => {
+    const dispatch = useDispatch()
+    const { user } = useSelector(state => state.app)
+
+    const toggleType = (type) => {
+        dispatch( updateUser({ type }))
+    }
+
+    const nextPage = () => {
+        const route = user.type === "M" ? "Driver" : "Passenger"
+        navigation.navigate(route)
+    }
+
 
     return (
         <Container
@@ -23,19 +38,19 @@ const Type = () => {
             </Container>
 
             <Container>
-                <PickerButton active>
+                <PickerButton active={user.type === 'M'} onPress={() => toggleType('M')}>
                     <Image source={car} />
                     <Title>Motorista</Title>
                 </PickerButton>
 
-                <PickerButton>
+                <PickerButton active={user.type === 'P'} onPress={() => toggleType('P')}>
                     <Image source={hand} />
                     <Title>Passageiro</Title>
                 </PickerButton>
             </Container>
 
             <Container height={70} justify="flex-end">
-                <Button>
+                <Button onPress={() => nextPage()}>
                     <ButtonText>Proximo Passo</ButtonText>
                 </Button>
             </Container>

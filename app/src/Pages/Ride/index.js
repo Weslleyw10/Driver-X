@@ -1,21 +1,53 @@
 import React, { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Keyboard } from 'react-native'
 
-import { 
-    Container, 
-    Title, 
-    SubTitle, 
-    Button, 
-    ButtonText, 
-    Input, 
-    Spacer, 
+import rest from '../../Services/rest'
+import { rideInfos } from '../../Store/modules/app/actions'
+
+import {
+    Container,
+    Title,
+    SubTitle,
+    Button,
+    ButtonText,
+    Input,
+    Spacer,
     AdressList,
     AddressItem
-
 } from '../../Styles'
 
 const Ride = () => {
+    const dispatch = useDispatch()
+
     const [visible, setVisible] = useState(true)
+    const [list, setList] = useState([])
+
+    const [activeInput, setActiveInput] = useState(null)
+    const [origin, setOrigin] = useState({})
+    const [destination, setDestination] = useState({})
+
+    const getPlaces = async (address) => {
+        try {
+            if (address !== '') {
+                const { data: res } = await rest.get(`/address/${address}`)
+
+                if(res.error) {
+                    alert(res.message)
+                    return false
+                }
+
+                setList(res.addressList)
+            }
+
+        } catch (error) {
+            alert(error.message)
+        }
+    }
+
+    const getRide = () => {
+        dispatch(rideInfos(origin.place_id, destination.place_id))
+    }
 
     useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener(
@@ -35,7 +67,6 @@ const Ride = () => {
 
     }, [])
 
-    const data = [1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 
     return (
         <>
@@ -65,27 +96,37 @@ const Ride = () => {
                     justify="flex-start"
                 >
                     <Container
-                        height={120} 
+                        height={120}
                         justify="flex-start"
                     >
-                        <Input placeholder="Embarque" />
+                        <Input
+                            onFocus={() => setActiveInput('setOrigin')}
+                            placeholder="Embarque"
+                            onChangeText={address => getPlaces(address)}
+                            value={origin.description}
+                        />
+
                         <Spacer />
-                        <Input placeholder="Destino" />
+
+                        <Input
+                            onFocus={() => setActiveInput('setDestination')}
+                            placeholder="Destino"
+                            onChangeText={address => getPlaces(address)}
+                            value={destination.description}
+                        />
 
                     </Container>
 
                     <Container>
                         <AdressList
-                            data={data}
-                            renderItem={({item, index}) => (
-                                <AddressItem>
-                                    <SubTitle bold>Menlo Park</SubTitle>
-                                    <SubTitle small>Palo Alto, CA</SubTitle>
+                            data={list}
+                            keyExtractor={item => item.place_id}
+                            renderItem={({ item, index }) => (
+                                <AddressItem onPress={() => eval(activeInput)(item)}>
+                                    <SubTitle bold>{item.description}</SubTitle>
+                                    <SubTitle small>{item.secondary_text}</SubTitle>
                                 </AddressItem>
                             )}
-
-                        
-                        
                         />
                     </Container>
                 </Container>
@@ -95,7 +136,7 @@ const Ride = () => {
 
                 {visible &&
                     <Container height={70} justify="flex-end">
-                        <Button>
+                        <Button onPress={() => getRide()}>
                             <ButtonText>Comece a usar</ButtonText>
                         </Button>
                     </Container>
